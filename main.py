@@ -1,9 +1,7 @@
 import sys
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2.QtCore import QObject, QRectF, Qt, QDir
-from PySide2.QtWidgets import QMainWindow, QFileDialog, QWidget, QVBoxLayout, QGraphicsScene, QGraphicsView, QLineEdit
-from PySide2.QtGui import QPixmap
-from PySide2 import *
+from PySide2 import QtCore, QtWidgets
+from PySide2.QtCore import QObject
+from PySide2.QtWidgets import QMainWindow, QFileDialog, QWidget, QLineEdit
 
 
 class Ui_MainWindow(object):
@@ -30,7 +28,6 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.Ok_Btn,2,1)
 
         MainWindow.setCentralWidget(self.centralWidget)
-
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
