@@ -4,7 +4,9 @@ This are the very first instructions you must follow before execute any code:
 
 ## 1. Please verify you have the follow libraries installed on you machine, if not please install it as follows:
 
-***NOTE: If the follows commands give you error of connection, you must connect to a VPN to execute them.***
+***NOTE1: If the follows commands give you error of connection, you must connect to a VPN to execute them.***
+
+***NOTE2: All code presented on this repository was built under Python 3.7.4 version on Windows Platform in Visual Studio Code.***
 
 Commands:
 
