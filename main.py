@@ -4,7 +4,9 @@ from PySide2 import QtCore, QtWidgets
 # from PySide2.QtCore import QObject
 # from PySide2.QtWidgets import QMainWindow, QFileDialog, QWidget, QLineEdit
 # import shapefile  
-from open_shape_file import DisplayAllShapes
+from Display_ShapeFile import DisplayAllShapes
+from get_shapes_between_x_and_y import DeleteExtraShapes
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -20,6 +22,7 @@ class Ui_MainWindow(object):
         self.file_Input_Label = QtWidgets.QLineEdit()
         self.Ok_Btn = QtWidgets.QPushButton(self.centralWidget)
         self.Exit_Btn = QtWidgets.QPushButton(self.centralWidget)
+
         self.file_Select_Btn.setObjectName("file_Select_Btn")
         self.file_Select_Btn.setText("Load Shape File")
         self.Ok_Btn.setObjectName("Ok_Btn")
@@ -54,7 +57,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return QtCore.QObject.tr(self, text)
 
     def getFilePath(self):
-
         self.path, ok = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Load File"), self.tr("~/Desktop/"), self.tr("Shape Files (*.shp)"))
         self.file_Input_Label.setText(self.path)
 
@@ -64,10 +66,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.Ok_Btn.setDisabled(True)
 
     def clickOkBtn(self):
+        #DISPLAY ALL SHAPES
+        file1 = DisplayAllShapes(self.path)
+        file1.open_all_shapes_png()
+        
+        #CREATE NEW SHAPEFILE WITH SHAPES ONLY BETWEEN X AND Y METERS OF DISTANCE
+        # file2 = DeleteExtraShapes(40, 5120, self.path)
+        # file2.delete_shapes_out_of_range()
 
-        file = DisplayAllShapes(self.path)
-        file.open_all_shapes_png()
-
+        
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

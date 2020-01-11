@@ -1,4 +1,4 @@
-import shapefile    
+import shapefile
 import matplotlib.pyplot as plt
 
 class DisplayAllShapes:
@@ -8,7 +8,8 @@ class DisplayAllShapes:
         self.path = path
 
     def open_all_shapes_png(self):
-
+        # To execute individually this script you must uncomment line 12 (put the path you want) and comment line 13
+        # sf = shapefile.Reader(r"E:/OneDrive - Instituto Politécnico do Cávado e do Ave/Desktop_backup/Tese/dados_tese/area_ardida_2017/AreasArdidas_2017_031002018_ETRS89PTTM06.shp")
         sf = shapefile.Reader(self.path)
 
         print("Initializing Display")
@@ -27,7 +28,7 @@ class DisplayAllShapes:
         for shape in sf.shapes():
             #print("Finding Points")
             points = shape.points
-            #print("Found Points")    
+            #print("Found Points")
 
             #print("Creating Polygon")
             ap = plt.Polygon(points, fill=False, edgecolor="k")
@@ -35,8 +36,6 @@ class DisplayAllShapes:
             #print("Polygon Created")
 
         print("Displaying Polygons")
-        plt.show()
-        
+        plt.show()       
         ax.set_axis_off() #do not show axis on image
         plt.savefig('shape_all.png')
-
