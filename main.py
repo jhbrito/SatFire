@@ -1,11 +1,8 @@
 import sys
-# import os
-from PySide2 import QtCore, QtWidgets
-# from PySide2.QtCore import QObject
-# from PySide2.QtWidgets import QMainWindow, QFileDialog, QWidget, QLineEdit
-# import shapefile  
+from PySide2 import QtCore, QtWidgets 
 from Display_ShapeFile import DisplayAllShapes
 from get_shapes_between_x_and_y import DeleteExtraShapes
+from get_image_map import GetImageMap
 
 
 class Ui_MainWindow(object):
@@ -66,15 +63,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.Ok_Btn.setDisabled(True)
 
     def clickOkBtn(self):
-        #DISPLAY ALL SHAPES
-        file1 = DisplayAllShapes(self.path)
-        file1.open_all_shapes_png()
+
+        # 1.DISPLAY ALL SHAPES
+        # file1 = DisplayAllShapes(self.path)
+        # file1.open_all_shapes_png()
         
-        #CREATE NEW SHAPEFILE WITH SHAPES ONLY BETWEEN X AND Y METERS OF DISTANCE
+        # 2.CREATE NEW SHAPEFILE WITH SHAPES ONLY BETWEEN X AND Y METERS OF DISTANCE
         # file2 = DeleteExtraShapes(40, 5120, self.path)
         # file2.delete_shapes_out_of_range()
 
-        
+        # 3.GET MAP IMAGE FROM WMS SERVICE AND RETURN THE IMAGE AS A NUMPY ARRAY
+        image = GetImageMap('http://mapas.dgterritorio.pt/wms/hrl-PTContinente', 256, (-11.0795, 36.3292, -4.68523, 42.7511))
+        image.get_image()
+        image_array = image.save_image('E:/OneDrive - Instituto Politécnico do Cávado e do Ave/Desktop_backup/Tese/dados_tese','teste_imagem')
+        print (image_array)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
