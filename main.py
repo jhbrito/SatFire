@@ -19,12 +19,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout6 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout7 = QtWidgets.QHBoxLayout()
         self.verticalLayout2 = QtWidgets.QVBoxLayout()
         self.verticalLayout3 = QtWidgets.QVBoxLayout()
 
 
-        self.file_Select_Btn = QtWidgets.QPushButton(self.centralWidget)
+        self.file_Select_Btn = QtWidgets.QPushButton()
         self.file_Input_Label = QtWidgets.QLineEdit()
+        self.file_save_path_Btn = QtWidgets.QPushButton()
+        self.file_save_path = QtWidgets.QLineEdit()
         self.rb1 = QtWidgets.QRadioButton('Tratar Ficheiro:')
         self.rb2 = QtWidgets.QRadioButton('Processar Ficheiro:')
         self.input_max = QtWidgets.QLineEdit('5.120')
@@ -36,6 +39,7 @@ class Ui_MainWindow(object):
 
         self.file_Select_Btn.setObjectName("file_Select_Btn")
         self.file_Select_Btn.setText("Load Shape File")
+        self.file_save_path_Btn.setText("Select Save Path")
         self.Ok_Btn.setObjectName("Ok_Btn")
         self.Ok_Btn.setText("OK")
         self.Ok_Btn.setDisabled(True)
@@ -43,6 +47,8 @@ class Ui_MainWindow(object):
         self.label_max.setVisible(False)
         self.input_min.setVisible(False)
         self.input_max.setVisible(False)
+        self.file_save_path.setVisible(False)
+        self.file_save_path_Btn.setVisible(False)
         self.input_max.setMaximumWidth(300)
         self.input_min.setMaximumWidth(300)
         self.Exit_Btn.setObjectName("Exit_Btn")
@@ -50,6 +56,8 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout1.addWidget(self.file_Input_Label)
         self.horizontalLayout1.addWidget(self.file_Select_Btn)
+        self.horizontalLayout7.addWidget(self.file_save_path)
+        self.horizontalLayout7.addWidget(self.file_save_path_Btn)        
         self.horizontalLayout2.addWidget(self.rb1, 50, QtCore.Qt.AlignLeft)
         self.horizontalLayout3.addWidget(self.label_max, 0, QtCore.Qt.AlignLeft)
         self.horizontalLayout3.addWidget(self.input_max, 0, QtCore.Qt.AlignLeft)
@@ -60,6 +68,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout6.addWidget(self.Exit_Btn)
 
         self.verticalLayout.addLayout(self.horizontalLayout1)
+        self.verticalLayout.addLayout(self.horizontalLayout7)
 
         self.verticalLayout2.addLayout(self.horizontalLayout2)
         self.verticalLayout2.addLayout(self.horizontalLayout4)
@@ -81,10 +90,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Ui_MainWindow.__init__(self)
         QtWidgets.QMainWindow.__init__(self)
         self.path = ''
+        self.dirname = ''
 
         # Initialize UI
         self.setupUi(self)
         self.file_Select_Btn.clicked.connect(self.getFilePath)
+        self.file_save_path_Btn.clicked.connect(self.getSavePath)
         self.Exit_Btn.clicked.connect(QtCore.QCoreApplication.instance().quit)   #close application
         self.Ok_Btn.clicked.connect(self.clickOkBtn)
         self.rb1.toggled.connect(lambda: self.rb_clicked(self.rb1))
@@ -96,6 +107,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def getFilePath(self):
         self.path, self.ok = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Load File"), self.tr("~/Desktop/"), self.tr("Shape Files (*.shp)"))
         self.file_Input_Label.setText(self.path)
+        self.enable_OkBtn()
+
+    def getSavePath(self):
+        self.dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Select directory", '~/')
+        self.file_save_path.setText(self.dirname)
         self.enable_OkBtn()
 
     def clickOkBtn(self):
@@ -122,15 +138,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.input_min.setVisible(True)
             self.label_min.setVisible(True)
             self.label_max.setVisible(True)
+            self.file_save_path.setVisible(True)
+            self.file_save_path_Btn.setVisible(True)
         else:
             self.input_max.setVisible(False)
             self.input_min.setVisible(False)
             self.label_min.setVisible(False)
             self.label_max.setVisible(False)
+            self.file_save_path.setVisible(False)
+            self.file_save_path_Btn.setVisible(False)
         self.enable_OkBtn()
 
     def enable_OkBtn(self):
-        if len(self.path) != 0 and (self.rb1.isChecked() or self.rb2.isChecked()):
+        if len(self.dirname) != 0 and len(self.path) != 0 and (self.rb1.isChecked() or self.rb2.isChecked()):
             self.Ok_Btn.setEnabled(True)
         else:
             self.Ok_Btn.setDisabled(True)
