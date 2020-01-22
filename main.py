@@ -111,6 +111,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def getSavePath(self):
         self.dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Select directory", '~/')
+        self.dirname = self.dirname + '/new_file.shp'
         self.file_save_path.setText(self.dirname)
         self.enable_OkBtn()
 
