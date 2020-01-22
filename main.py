@@ -1,5 +1,5 @@
 import sys
-from PySide2 import QtCore, QtWidgets 
+from PySide2 import QtCore, QtWidgets
 from Display_ShapeFile import DisplayAllShapes
 from get_shapes_between_x_and_y import DeleteExtraShapes
 from get_image_map import GetImageMap
@@ -7,34 +7,72 @@ from get_image_map import GetImageMap
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+        
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         self.centralWidget.setMinimumHeight(600)
         self.centralWidget.setMinimumWidth(2000)
 
-        self.gridLayout = QtWidgets.QGridLayout(self.centralWidget)
-        self.gridLayout.setColumnMinimumWidth(1,300)
-        self.gridLayout.setColumnMinimumWidth(2,100)
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.centralWidget)
+        self.horizontalLayout1 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout4 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout5 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout6 = QtWidgets.QHBoxLayout()
+        self.verticalLayout2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout3 = QtWidgets.QVBoxLayout()
+
 
         self.file_Select_Btn = QtWidgets.QPushButton(self.centralWidget)
         self.file_Input_Label = QtWidgets.QLineEdit()
-        self.Ok_Btn = QtWidgets.QPushButton(self.centralWidget)
-        self.Exit_Btn = QtWidgets.QPushButton(self.centralWidget)
+        self.rb1 = QtWidgets.QRadioButton('Tratar Ficheiro:')
+        self.rb2 = QtWidgets.QRadioButton('Processar Ficheiro:')
+        self.input_max = QtWidgets.QLineEdit('5.120')
+        self.input_min = QtWidgets.QLineEdit('0.040')
+        self.label_max = QtWidgets.QLabel('Max Width (Km):')
+        self.label_min = QtWidgets.QLabel('Min Width (Km):')
+        self.Ok_Btn = QtWidgets.QPushButton()
+        self.Exit_Btn = QtWidgets.QPushButton()
 
         self.file_Select_Btn.setObjectName("file_Select_Btn")
         self.file_Select_Btn.setText("Load Shape File")
         self.Ok_Btn.setObjectName("Ok_Btn")
         self.Ok_Btn.setText("OK")
         self.Ok_Btn.setDisabled(True)
+        self.label_min.setVisible(False)
+        self.label_max.setVisible(False)
+        self.input_min.setVisible(False)
+        self.input_max.setVisible(False)
+        self.input_max.setMaximumWidth(300)
+        self.input_min.setMaximumWidth(300)
         self.Exit_Btn.setObjectName("Exit_Btn")
         self.Exit_Btn.setText("Exit")
 
-        self.gridLayout.addWidget(self.file_Input_Label,1,1)
-        self.gridLayout.addWidget(self.file_Select_Btn,1,2)
-        self.gridLayout.addWidget(self.Ok_Btn,2,1)
-        self.gridLayout.addWidget(self.Exit_Btn,2,2)
+        self.horizontalLayout1.addWidget(self.file_Input_Label)
+        self.horizontalLayout1.addWidget(self.file_Select_Btn)
+        self.horizontalLayout2.addWidget(self.rb1, 50, QtCore.Qt.AlignLeft)
+        self.horizontalLayout3.addWidget(self.label_max, 0, QtCore.Qt.AlignLeft)
+        self.horizontalLayout3.addWidget(self.input_max, 0, QtCore.Qt.AlignLeft)
+        self.horizontalLayout3.addWidget(self.label_min, 0, QtCore.Qt.AlignLeft)
+        self.horizontalLayout3.addWidget(self.input_min, 0, QtCore.Qt.AlignLeft)
+        self.horizontalLayout4.addWidget(self.rb2, 50, QtCore.Qt.AlignLeft)
+        self.horizontalLayout6.addWidget(self.Ok_Btn)
+        self.horizontalLayout6.addWidget(self.Exit_Btn)
+
+        self.verticalLayout.addLayout(self.horizontalLayout1)
+
+        self.verticalLayout2.addLayout(self.horizontalLayout2)
+        self.verticalLayout2.addLayout(self.horizontalLayout4)
+        self.verticalLayout3.addLayout(self.horizontalLayout3)
+
+        self.horizontalLayout5.addLayout(self.verticalLayout2)
+        self.horizontalLayout5.addLayout(self.verticalLayout3)
+
+        self.verticalLayout.addLayout(self.horizontalLayout5)
+        self.verticalLayout.addLayout(self.horizontalLayout6)
+
 
         MainWindow.setCentralWidget(self.centralWidget)
-
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 
@@ -49,18 +87,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.file_Select_Btn.clicked.connect(self.getFilePath)
         self.Exit_Btn.clicked.connect(QtCore.QCoreApplication.instance().quit)   #close application
         self.Ok_Btn.clicked.connect(self.clickOkBtn)
+        self.rb1.toggled.connect(lambda: self.rb_clicked(self.rb1))
+        self.rb2.toggled.connect(lambda: self.rb_clicked(self.rb2))
 
     def tr(self, text):
         return QtCore.QObject.tr(self, text)
 
     def getFilePath(self):
-        self.path, ok = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Load File"), self.tr("~/Desktop/"), self.tr("Shape Files (*.shp)"))
+        self.path, self.ok = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Load File"), self.tr("~/Desktop/"), self.tr("Shape Files (*.shp)"))
         self.file_Input_Label.setText(self.path)
-
-        if ok:
-            self.Ok_Btn.setEnabled(True)
-        else:
-            self.Ok_Btn.setDisabled(True)
+        self.enable_OkBtn()
 
     def clickOkBtn(self):
 
@@ -69,14 +105,35 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # file1.open_all_shapes_png()
         
         # 2.CREATE NEW SHAPEFILE WITH SHAPES ONLY BETWEEN X AND Y METERS OF DISTANCE
-        # file2 = DeleteExtraShapes(40, 5120, self.path)
+        file2 = DeleteExtraShapes(0.040, 5.120, self.path)
         # file2.delete_shapes_out_of_range()
+        
+        # file2.process_file('http://si.icnf.pt/wms/ardida_2017?service=wms&version=1.3.0&request=GetCapabilities')
 
         # 3.GET MAP IMAGE FROM WMS SERVICE AND RETURN THE IMAGE AS A NUMPY ARRAY
-        image = GetImageMap('http://mapas.dgterritorio.pt/wms/hrl-PTContinente', 256, (-11.0795, 36.3292, -4.68523, 42.7511))
-        image.get_image()
-        image_array = image.save_image('E:/OneDrive - Instituto Politécnico do Cávado e do Ave/Desktop_backup/Tese/dados_tese','teste_imagem')
-        print (image_array)
+        # image = GetImageMap('http://mapas.dgterritorio.pt/wms/hrl-PTContinente', 256, (-11.0795, 36.3292, -4.68523, 42.7511))
+        # image.get_image()
+        # image_array = image.save_image('E:/OneDrive - Instituto Politécnico do Cávado e do Ave/Desktop_backup/Tese/dados_tese','teste_imagem')
+        # print (image_array)
+
+    def rb_clicked(self, btn):
+        if btn.text() == 'Tratar Ficheiro:':
+            self.input_max.setVisible(True)
+            self.input_min.setVisible(True)
+            self.label_min.setVisible(True)
+            self.label_max.setVisible(True)
+        else:
+            self.input_max.setVisible(False)
+            self.input_min.setVisible(False)
+            self.label_min.setVisible(False)
+            self.label_max.setVisible(False)
+        self.enable_OkBtn()
+
+    def enable_OkBtn(self):
+        if len(self.path) != 0 and (self.rb1.isChecked() or self.rb2.isChecked()):
+            self.Ok_Btn.setEnabled(True)
+        else:
+            self.Ok_Btn.setDisabled(True)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
