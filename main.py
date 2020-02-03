@@ -54,6 +54,8 @@ class Ui_MainWindow(object):
         self.Exit_Btn.setObjectName("Exit_Btn")
         self.Exit_Btn.setText("Exit")
 
+        
+
         self.horizontalLayout1.addWidget(self.file_Input_Label)
         self.horizontalLayout1.addWidget(self.file_Select_Btn)
         self.horizontalLayout7.addWidget(self.file_save_path)
@@ -122,10 +124,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # file1.open_all_shapes_png()
         
         # 2.CREATE NEW SHAPEFILE WITH SHAPES ONLY BETWEEN X AND Y METERS OF DISTANCE
-        file2 = DeleteExtraShapes(0.040, 5.120, self.path)
-        # file2.delete_shapes_out_of_range()
-        
-        # file2.process_file('http://si.icnf.pt/wms/ardida_2017?service=wms&version=1.3.0&request=GetCapabilities')
+        if self.rb1.isChecked():
+            file2 = DeleteExtraShapes(self.path, float(self.input_min.text()), float(self.input_max.text()), self.dirname)
+            file2.delete_shapes_out_of_range()
+
+        elif self.rb2.isChecked():
+            file2 = DeleteExtraShapes(self.path)
+            file2.process_file('http://si.icnf.pt/wms/ardida_2017?service=wms&version=1.3.0&request=GetCapabilities')
 
         # 3.GET MAP IMAGE FROM WMS SERVICE AND RETURN THE IMAGE AS A NUMPY ARRAY
         # image = GetImageMap('http://mapas.dgterritorio.pt/wms/hrl-PTContinente', 256, (-11.0795, 36.3292, -4.68523, 42.7511))

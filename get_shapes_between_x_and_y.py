@@ -1,16 +1,21 @@
-import shapefile    
-from pyproj import Proj, transform
+from pyproj import Proj, transform 
 from haversine import haversine
-from get_image_map import GetImageMap
 from epsg_ident import EpsgIdent
+from math import sqrt,atan,pi
+import pyproj
 import shutil
+import shapefile 
+from get_image_map import GetImageMap
+
+
 
 class DeleteExtraShapes:
 
-    def __init__(self, len_min, len_max, path):
+    def __init__(self, path, len_min=0, len_max=0, dirname_path=''):
         self.min = len_min
         self.max = len_max
         self.path = path
+        self.dirname_path = dirname_path
 
         self.inProj = Proj(init='epsg:3763')
         self.outProj = Proj(init='epsg:4326')
@@ -26,12 +31,13 @@ class DeleteExtraShapes:
         sf = shapefile.Reader(self.path)
         
         print("Builting the new shape file ")
-        new_doc = 'E:\OneDrive - Instituto Politécnico do Cávado e do Ave\Desktop_backup\Tese\dados_tese\copy'
+        # new_doc = 'E:\OneDrive - Instituto Politécnico do Cávado e do Ave\Desktop_backup\Tese\dados_tese\copy'
+        new_doc = self.dirname_path
         w = shapefile.Writer(new_doc)
         w.fields = sf.fields[1:] # skip first deletion field
 
         for shape in sf.iterShapeRecords(): #loop shapefile
-            del x_dist, y_dist, xmin, xmax, ymin, ymax, x_minpoint, y_minpoint, x_maxpoint, y_maxpoint
+           
             xmin = shape.shape.bbox[0]
             xmax = shape.shape.bbox[2]
             ymin = shape.shape.bbox[1]
@@ -53,11 +59,12 @@ class DeleteExtraShapes:
                     continue
             else:
                 continue
-            
+            del x_dist, y_dist, xmin, xmax, ymin, ymax, x_minpoint, y_minpoint, x_maxpoint, y_maxpoint
         w.close()
 
         # create the PRJ file
         prj_file_old = self.path.replace('.shp', '.prj')
+        new_doc.replace('.shp', '')
         prj_file_new = new_doc + '.prj'
         shutil.copy(prj_file_old, prj_file_new)
 
@@ -86,3 +93,26 @@ class DeleteExtraShapes:
         epsg = ident.get_epsg()
         return ('EPSG:' + str(epsg))
 
+    def calculate_new_coordinates(self, center_pnt, width = 2500, height = 2500):
+        # width and height variables must be in meters
+
+        geod = pyproj.Geod(ellps='GRS80')
+
+        rect_diag = sqrt( width**2 + height**2 )
+
+        center_lon = -78.6389
+        center_lat = 35.7806
+
+        azimuth1 = atan(width/height)
+        azimuth2 = atan(-width/height)
+        azimuth3 = atan(width/height)+pi # first point + 180 degrees
+        azimuth4 = atan(-width/height)+pi # second point + 180 degrees
+
+        pt1_lon, pt1_lat, _ = geod.fwd(center_lon, center_lat, azimuth1*180/pi, rect_diag)
+        pt2_lon, pt2_lat, _ = geod.fwd(center_lon, center_lat, azimuth2*180/pi, rect_diag)
+        pt3_lon, pt3_lat, _ = geod.fwd(center_lon, center_lat, azimuth3*180/pi, rect_diag)
+        pt4_lon, pt4_lat, _ = geod.fwd(center_lon, center_lat, azimuth4*180/pi, rect_diag)
+
+        new_coordinates = ''
+        
+        return new_coordinates
