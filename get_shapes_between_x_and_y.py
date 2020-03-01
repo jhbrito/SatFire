@@ -86,7 +86,8 @@ class ProcesseShapes:
             #get and save images from WMS services
             bounding_box = image.GetBBoxImage(shape, 5120, 5120, self.epsg), 
             
-            wms_image = image.GetWmsImage((256,256), bounding_box, new_path)
+            wms_image_cos = image.GetWmsImage((256,256), bounding_box, new_path, 'COS')
+            wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')
 
             # image_array = image.get_image_numpy_format()
             if total == 2:

@@ -15,12 +15,23 @@ from classes_cos2018 import RGBClassesCodes
 class GetImageMap:
 
     def __init__(self):
-        self.url = 'http://mapas.dgterritorio.pt/wms-inspire/cos2018v1'
-
-        self.cos2018_list=['1', ('2','3'), '4','5','6','7',('8','9')]
-
-    def GetWmsImage(self, size, bbox, path, epsg='', url='', img_format='image/png', layer='', style='', binarized=False):
         
+        self.gc_cos = 'COS'
+        self.gc_higher = 'Higher'
+
+    def GetWmsImage(self, size, bbox, path, map_descrp, epsg='', url='', img_format='image/png', layer='', style='', binarized=False):
+        init_size = ()
+        if map_descrp == self.gc_cos:
+            init_size = (2600,2600)
+            self.url = 'http://mapas.dgterritorio.pt/wms-inspire/cos2018v1'
+            image_name = 'cos.png'
+        elif map_descrp == self.gc_higher:
+            init_size = (2048,2048)
+            self.url = 'http://mapas.dgterritorio.pt/wms-inspire/mdt50m'
+            image_name = 'alturas.png'
+        else:
+            raise Exception('Wrong Parameter "map_descrp". Only "COS" or "Higher" is allowed')
+
         if (url == ''):
             url = self.url
 
@@ -50,7 +61,7 @@ class GetImageMap:
                             styles=[style],
                             srs=epsg,
                             bbox=bbox,
-                            size=(2600,2600),
+                            size=init_size,
                             format=img_format,
                             transparent=False)
         
@@ -59,7 +70,6 @@ class GetImageMap:
 
         data=response.read()
 
-        image_name = 'wms_image.png'
         out = open(image_name, 'wb')
         result = out.write(data)
         out.close()
@@ -68,10 +78,10 @@ class GetImageMap:
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         dim = size
         # resize image
-        resized = cv2.resize(img_rgb, dim, interpolation = cv2.INTER_AREA)
+        resized = cv2.resize(img_rgb, dim, interpolation = cv2.INTER_NEAREST)
         cv2.imwrite(image_name, resized)
 
-        bin_image = self.BuildBinaryImage(image_name)
+        bin_image = self.BuildBinaryImage(image_name, map_descrp)
         cv2.imwrite(image_name, bin_image)
         
         self.MoveImageToPath(path, image_name)
@@ -237,11 +247,12 @@ class GetImageMap:
 
         return bbox
     
-    def BuildBinaryImage(self, img_name):
+    def BuildBinaryImage(self, img_name, map_descrp):
 
         codes = RGBClassesCodes()
-        cos_list = ['2', '4', '5', '7.1.1']
+        cos_list = ['2','3','4','5','6']
         img = cv2.imread(img_name)
+        rgb_list={}
 
         # grab the image dimensions
         h = img.shape[0]
@@ -251,12 +262,21 @@ class GetImageMap:
         bin_image = np.ones([256,256], dtype=np.uint8)*255
         
         # build new image, pixel by pixel
-        rgb_list = codes.GetRgbCodes(cos_list)
-        for y in range(0, h):
-            for x in range(0, w):
-                if tuple(img[x,y]) in rgb_list:
-                    bin_image[x, y] = codes.rgb_classecode_dict[str(tuple(img[x,y])).replace(" ","")]
-            
+
+        if map_descrp == self.gc_cos: #build cos map image
+            rgb_list = codes.BuildDynamicDict(cos_list)
+            for y in range(0, h):
+                for x in range(0, w):
+                    if tuple(img[x,y]) in rgb_list.keys():
+                        bin_image[x, y] = rgb_list[tuple(img[x,y])]
+
+        elif map_descrp == self.gc_higher: #build higher map image
+            rgb_list = codes.rgb_highercode_dict
+            for y in range(0, h):
+                for x in range(0, w):
+                    if tuple(img[x,y]) in rgb_list.keys():
+                        bin_image[x, y] = rgb_list[tuple(img[x,y])]
+
         return bin_image
 
 
