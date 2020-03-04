@@ -13,6 +13,7 @@ class ProcesseShapes:
         self.max = len_max
         self.path = path
         self.dirname_path = dirname_path
+        self.value = 3 #(km)
 
         self.epsg = self.read_epsg() #EPSG coordinates from uploaded shapefile
         self.inProj = Proj(init=self.epsg) 
@@ -73,6 +74,8 @@ class ProcesseShapes:
         path = head_tail[0] + '/imagem'
         image.CreateFolder(path)  
 
+        file1 = open(path+"/biggest.txt","w")
+        file2 = open(path+"/smallest.txt","w")
         for shape in sf.iterShapeRecords(): #loop shapefile
             total = total + 1
 
@@ -81,17 +84,24 @@ class ProcesseShapes:
             image.CreateFolder(new_path) 
 
             #draw de shape and save respective image (256x256)
-            shape_image = image.DrawAndGetImage(shape, 5120, 5120, (256,256), total, new_path, binarized=True)
+            shape_image = image.DrawAndGetImage(shape, 5120, 5120, (256,256), 'shape', new_path, binarized=True)
 
             #get and save images from WMS services
-            bounding_box = image.GetBBoxImage(shape, 5120, 5120, self.epsg), 
-            
+            bounding_box = image.GetBBoxImage(shape, 5120, 5120, self.epsg)
+    
             wms_image_cos = image.GetWmsImage((256,256), bounding_box, new_path, 'COS')
             wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')
 
+            # build json file
+            image.BuildJsonFile(shape, 'data.json', new_path)
+
+            # insert into txt file
+            self.CalculateShapeWidth(shape, total, file1, file2)
             # image_array = image.get_image_numpy_format()
             if total == 2:
                 break
+        file1.close()
+        file2.close()
         print("File Processing is finished!")
 
     def read_epsg(self):
@@ -100,5 +110,27 @@ class ProcesseShapes:
         ident.read_prj_from_file(prj_file)
         epsg = ident.get_epsg()
         return ('EPSG:' + str(epsg))
+
+    def CalculateShapeWidth(self, shape, number, file1, file2):
+        xmin = shape.shape.bbox[0]
+        xmax = shape.shape.bbox[2]
+        ymin = shape.shape.bbox[1]
+        ymax = shape.shape.bbox[3]
+
+        x_minpoint = transform(self.inProj,self.outProj,xmin,ymin)
+        x_maxpoint = transform(self.inProj,self.outProj,xmax, ymin)
+        y_minpoint = transform(self.inProj,self.outProj,xmin,ymin)
+        y_maxpoint = transform(self.inProj,self.outProj,xmin,ymax)
+
+        x_dist = haversine(x_minpoint, x_maxpoint)
+        y_dist = haversine(y_minpoint, y_maxpoint)
+
+        if x_dist != "" and y_dist != "":
+            if (x_dist >= self.value or y_dist >= self.value):
+                file1.write("%i \n" %number) 
+            else:
+                file2.write("%i \n" %number)
+
+        del x_dist, y_dist, xmin, xmax, ymin, ymax, x_minpoint, y_minpoint, x_maxpoint, y_maxpoint        
 
    

@@ -11,6 +11,7 @@ import pyproj
 import cv2 as cv2
 import shutil
 from classes_cos2018 import RGBClassesCodes
+import json
 
 class GetImageMap:
 
@@ -55,8 +56,6 @@ class GetImageMap:
             styles_names = list(wms[layer].styles) 
             style = styles_names[0]
 
-        bbox = bbox[0]
-
         response = wms.getmap( layers=[layer],
                             styles=[style],
                             srs=epsg,
@@ -77,6 +76,7 @@ class GetImageMap:
         img = cv2.imread(image_name, cv2.IMREAD_UNCHANGED)
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         dim = size
+
         # resize image
         resized = cv2.resize(img_rgb, dim, interpolation = cv2.INTER_NEAREST)
         cv2.imwrite(image_name, resized)
@@ -103,7 +103,7 @@ class GetImageMap:
             print ('Error: Creating directory. ' +  directory)
     
     def DrawAndGetImage(self, shape, img_width, img_height, img_size, image_name, path, binarized=False):
-        
+
         inProj = Proj(init='epsg:3763')
         outProj = Proj(init='epsg:4326')
         size_x = img_size[0]
@@ -279,7 +279,23 @@ class GetImageMap:
 
         return bin_image
 
+    def BuildJsonFile(self, shape, json_name, path):
+        
+        inProj = Proj(init='epsg:5018')
+        outProj = Proj(init='epsg:4326')
+    
+        center_x = shape.record.x
+        center_y = shape.record.y
 
+        #convert to Lat/Long
+        center_lat,center_lon  = transform(inProj,outProj,center_x,center_y)
 
+        data = {
+                "name": "Zaphod Beeblebrox",
+                "species": "Betelgeusian"
+                }
+        with open(json_name, "w") as write_file:
+            json.dump(data, write_file)
 
-       
+        self.MoveImageToPath(path, json_name)
+        
