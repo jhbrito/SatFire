@@ -12,6 +12,8 @@ import cv2 as cv2
 import shutil
 from classes_cos2018 import RGBClassesCodes
 import json
+import requests
+from requests.auth import HTTPDigestAuth
 
 class GetImageMap:
 
@@ -279,23 +281,59 @@ class GetImageMap:
 
         return bin_image
 
-    def BuildJsonFile(self, shape, json_name, path):
-        
-        inProj = Proj(init='epsg:5018')
+    def BuildJsonFile(self, shape):
+        data={}
+
+        inProj = Proj(init='epsg:3763')
         outProj = Proj(init='epsg:4326')
-    
-        center_x = shape.record.x
-        center_y = shape.record.y
+
+        center_x = (shape.shape.bbox[0] + shape.shape.bbox[2]) / 2
+        center_y = (shape.shape.bbox[1] + shape.shape.bbox[3]) / 2
 
         #convert to Lat/Long
         center_lat,center_lon  = transform(inProj,outProj,center_x,center_y)
-
-        data = {
-                "name": "Zaphod Beeblebrox",
-                "species": "Betelgeusian"
-                }
-        with open(json_name, "w") as write_file:
-            json.dump(data, write_file)
-
-        self.MoveImageToPath(path, json_name)
         
+        data = self.GetWeatherConditions(shape,center_lat,center_lon)
+
+        data.update({'area': shape.record.Area_SIG})
+
+        return data
+        # with open(json_name, "w") as write_file:
+        #     json.dump(data, write_file)
+        
+        # self.MoveImageToPath(path, json_name)
+    
+    def GetWeatherConditions(self, shape, lat, longt):
+        
+        url = 'https://api.worldweatheronline.com/premium/v1/past-weather.ashx?'+'date='+str(shape.record.DHInicio[:10])+'&includelocation=yes'+'&tp=1'+'&key=683b13468c16425d800122732200702'+'&q='+str(lat)[:6]+' '+str(longt)[:6]+'&format=json'
+        
+        # get aproximately hour (entire number)
+        if int(shape.record.DHInicio[14:16]) >= 30:
+            hour = int(shape.record.DHInicio[11:13]) + 1
+        else:
+            hour = int(shape.record.DHInicio[11:13])
+        
+
+        myResponse = requests.get(url)
+
+        if(myResponse.ok):
+            json_data = json.loads(myResponse.content)
+
+            hourly=json_data['data']['weather'][0]['hourly'][hour]
+            out_dict={
+                'date': shape.record.DHInicio[:10],
+                'humidity': hourly['humidity'], 
+                'tempC': hourly['tempC'], 
+                'windspeedKmph': hourly['windspeedKmph'], 
+                'winddir16Point': hourly['winddir16Point'], 
+                'winddirDegree': hourly['winddirDegree'],
+                'precipMM': hourly['precipMM'],
+                'cloudcover': hourly['cloudcover'],
+                'WindGustKmph': hourly['WindGustKmph']
+                }
+
+        else:
+        # If response code is not ok (200), print the resulting http error code with description
+            myResponse.raise_for_status()
+    	
+        return out_dict

@@ -5,6 +5,7 @@ import shutil
 import shapefile 
 from get_image_map import GetImageMap
 import os
+import json
 
 class ProcesseShapes:
 
@@ -74,11 +75,12 @@ class ProcesseShapes:
         path = head_tail[0] + '/imagem'
         image.CreateFolder(path)  
 
-        file1 = open(path+"/biggest.txt","w")
-        file2 = open(path+"/smallest.txt","w")
+        # file1 = open(path+"/biggest.txt","w")
+        # file2 = open(path+"/smallest.txt","w")
+        json_data = {}
         for shape in sf.iterShapeRecords(): #loop shapefile
-            total = total + 1
 
+            total = total + 1
             #create folder to save the information about the shapefile
             new_path = path + '/' + str(total)
             image.CreateFolder(new_path) 
@@ -93,15 +95,23 @@ class ProcesseShapes:
             wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')
 
             # build json file
-            image.BuildJsonFile(shape, 'data.json', new_path)
+            data = image.BuildJsonFile(shape)
 
             # insert into txt file
-            self.CalculateShapeWidth(shape, total, file1, file2)
+            # self.CalculateShapeWidth(shape, total, file1, file2)
             # image_array = image.get_image_numpy_format()
+
+            json_data[total] = data
+
             if total == 2:
                 break
-        file1.close()
-        file2.close()
+
+        with open('data.json', "w") as write_file:
+            json.dump(json_data, write_file)
+        
+        shutil.move('data.json', path)
+        # file1.close()
+        # file2.close()
         print("File Processing is finished!")
 
     def read_epsg(self):
