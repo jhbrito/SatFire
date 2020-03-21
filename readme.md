@@ -37,3 +37,7 @@ python -m pip install -U Shapely-1.6.4.post2-cp37-cp37m-win_amd64.whl --user 		"
 python -m pip install --user numpy scipy matplotlib ipython jupyter pandas sympy nose 	"Probably this lib is not necessary
 
 python -m pip install -U PySide2 --user "This is to install QT for Python to use in the interface
+
+pip install tensorflow==2.0.0 " tensorflow 2.1.0 will not work properly on cpu version
+
+pip install Keras

@@ -118,7 +118,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.enable_OkBtn()
 
     def clickOkBtn(self):
-
+        self.Ok_Btn.setDisabled(True)
         # 1.DISPLAY ALL SHAPES
         # file1 = DisplayAllShapes(self.path)
         # file1.open_all_shapes_png()
@@ -137,7 +137,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # image.get_image()
         # image_array = image.save_image('E:/OneDrive - Instituto Politécnico do Cávado e do Ave/Desktop_backup/Tese/dados_tese','teste_imagem')
         # print (image_array)
-
+        self.Ok_Btn.setEnabled(True)
     def rb_clicked(self):
         #on radio buttons click, the interface layout changes
         if self.rb1.isChecked():

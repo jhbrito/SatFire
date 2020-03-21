@@ -66,52 +66,52 @@ class ProcesseShapes:
 
     def process_file(self, url):
         sf = shapefile.Reader(self.path)
-        total = 0
+
         print("Processing new shape file...")
         image = GetImageMap()
 
         #create folder to save the information about the shapefile
         head_tail = os.path.split(self.path)
-        path = head_tail[0] + '/imagem'
+        path = head_tail[0] + '/dataset'
         image.CreateFolder(path)  
 
-        # file1 = open(path+"/biggest.txt","w")
-        # file2 = open(path+"/smallest.txt","w")
+        min_limit = self.GetNumberRequestsMade(path)
+        max_limit = min_limit + 5
+
         json_data = {}
+        idx = 0
         for shape in sf.iterShapeRecords(): #loop shapefile
+ 
+            if idx >= min_limit and idx < max_limit:
+                min_limit = min_limit + 1
 
-            total = total + 1
-            #create folder to save the information about the shapefile
-            new_path = path + '/' + str(total)
-            image.CreateFolder(new_path) 
+                #create folder to save the information about the shapefile
+                new_path = path + '/' + str(min_limit)
+                image.CreateFolder(new_path) 
 
-            #draw de shape and save respective image (256x256)
-            shape_image = image.DrawAndGetImage(shape, 5120, 5120, (256,256), 'shape', new_path, binarized=True)
+                #draw de shape and save respective image (256x256)
+                shape_image = image.DrawAndGetImage(shape, 5120, 5120, (256,256), 'shape', new_path, binarized=True)
 
-            #get and save images from WMS services
-            bounding_box = image.GetBBoxImage(shape, 5120, 5120, self.epsg)
-    
-            wms_image_cos = image.GetWmsImage((256,256), bounding_box, new_path, 'COS')
-            wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')
+                #get and save images from WMS services
+                bounding_box = image.GetBBoxImage(shape, 5120, 5120, self.epsg)
+        
+                wms_image_cos = image.GetWmsImage((256,256), bounding_box, new_path, 'COS')
+                wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')
 
-            # build json file
-            data = image.BuildJsonFile(shape)
+                # build json file
+                json_data[min_limit] = image.BuildJsonFile(shape)
 
-            # insert into txt file
-            # self.CalculateShapeWidth(shape, total, file1, file2)
-            # image_array = image.get_image_numpy_format()
+                # insert into txt file
+                # self.CalculateShapeWidth(shape, total, file1, file2)
+                # image_array = image.get_image_numpy_format()
 
-            json_data[total] = data
-
-            if total == 2:
+            if idx >= max_limit:
                 break
 
-        with open('data.json', "w") as write_file:
-            json.dump(json_data, write_file)
+            idx = idx + 1    
+            
+        self.UpdateJsonFile(json_data, path)
         
-        shutil.move('data.json', path)
-        # file1.close()
-        # file2.close()
         print("File Processing is finished!")
 
     def read_epsg(self):
@@ -143,4 +143,26 @@ class ProcesseShapes:
 
         del x_dist, y_dist, xmin, xmax, ymin, ymax, x_minpoint, y_minpoint, x_maxpoint, y_maxpoint        
 
-   
+    def GetNumberRequestsMade(self, directory):
+        all_subdirs = os.listdir(directory)
+        if all_subdirs:
+            total = int(len(all_subdirs)-1)            
+        else:
+            total = 0
+
+        return total
+    
+    def UpdateJsonFile(self, data, directory):
+        path = directory + '/data.json' 
+        new_data={}
+
+        if not os.path.exists(path):
+            with open(path, "w") as jsonFile:
+                json.dump(data, jsonFile)
+        else:
+            with open(path, "r") as jsonFile:
+                old_data = json.load(jsonFile)
+            new_data = old_data
+            new_data.update(data)
+            with open(path, "w") as jsonFile:
+                json.dump(new_data, jsonFile)
