@@ -252,7 +252,7 @@ class GetImageMap:
     def BuildBinaryImage(self, img_name, map_descrp):
 
         codes = RGBClassesCodes()
-        cos_list = ['2','3','4','5','6']
+        cos_list = ['2',('3','4'),'5','6']
         img = cv2.imread(img_name)
         rgb_list={}
 
@@ -260,11 +260,9 @@ class GetImageMap:
         h = img.shape[0]
         w = img.shape[1]
 
-        # bin_image = int(np.ones((h,w,1)) * 255)
         bin_image = np.ones([256,256], dtype=np.uint8)*255
         
         # build new image, pixel by pixel
-
         if map_descrp == self.gc_cos: #build cos map image
             rgb_list = codes.BuildDynamicDict(cos_list)
             for y in range(0, h):
@@ -298,14 +296,11 @@ class GetImageMap:
         data.update({'area': shape.record.Area_SIG})
 
         return data
-        # with open(json_name, "w") as write_file:
-        #     json.dump(data, write_file)
-        
-        # self.MoveImageToPath(path, json_name)
     
     def GetWeatherConditions(self, shape, lat, longt):
         
-        url = 'https://api.worldweatheronline.com/premium/v1/past-weather.ashx?'+'date='+str(shape.record.DHInicio[:10])+'&includelocation=yes'+'&tp=1'+'&key=683b13468c16425d800122732200702'+'&q='+str(lat)[:6]+' '+str(longt)[:6]+'&format=json'
+        lat_long = str(lat)[:6]+' '+str(longt)[:6]
+        url = 'https://api.worldweatheronline.com/premium/v1/past-weather.ashx?'+'date='+str(shape.record.DHInicio[:10])+'&includelocation=yes'+'&tp=1'+'&key=683b13468c16425d800122732200702'+'&q='+lat_long+'&format=json'
         
         # get aproximately hour (entire number)
         if int(shape.record.DHInicio[14:16]) >= 30:
@@ -322,6 +317,7 @@ class GetImageMap:
             hourly=json_data['data']['weather'][0]['hourly'][hour]
             out_dict={
                 'date': shape.record.DHInicio[:10],
+                'hour':hour,
                 'humidity': hourly['humidity'], 
                 'tempC': hourly['tempC'], 
                 'windspeedKmph': hourly['windspeedKmph'], 
@@ -329,7 +325,8 @@ class GetImageMap:
                 'winddirDegree': hourly['winddirDegree'],
                 'precipMM': hourly['precipMM'],
                 'cloudcover': hourly['cloudcover'],
-                'WindGustKmph': hourly['WindGustKmph']
+                'WindGustKmph': hourly['WindGustKmph'],
+                'lat/long': lat_long
                 }
 
         else:
@@ -337,3 +334,19 @@ class GetImageMap:
             myResponse.raise_for_status()
     	
         return out_dict
+
+# JUST FOR TEST THIS CLASS
+# if __name__ == "__main__":
+    # image = GetImageMap()
+    # image.CreateFolder(<path_to_create_folder>)
+    # #draw de shape and save respective image (256x256)
+    # shape_image = image.DrawAndGetImage(<shape(iterated)>, 5120, 5120, (256,256), 'shape', <new_path_with_created_folder>, binarized=True)
+
+    # #get and save images from WMS services
+    # bounding_box = image.GetBBoxImage(<shape(iterated)>, 5120, 5120, <shape_epsg>)
+        
+    # wms_image_cos = image.GetWmsImage((256,256), <bounding_box>, <new_path_with_created_folder>, 'COS')
+    # wms_image_higher = image.GetWmsImage((256,256), <bounding_box>, <new_path_with_created_folder>, 'Higher')
+
+    # # build json file
+    # json_data[min_limit] = image.BuildJsonFile(<shape(iterated)>)

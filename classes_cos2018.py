@@ -263,6 +263,7 @@ class RGBClassesCodes:
 
         return out_dict
 
+# JUST FOR TEST THIS CLASS
 # if __name__ == "__main__":
 #     classes = RGBClassesCodes()
 #     rgb_list = classes.BuildDynamicDict([ '1.1.1.1', ('2.1', '2.2'), '4', '7.1.1'])

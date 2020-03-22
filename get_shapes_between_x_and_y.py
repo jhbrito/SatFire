@@ -64,7 +64,7 @@ class ProcesseShapes:
         shutil.copy(prj_file_old, prj_file_new) #copy the old proj file for new path
         print("->File Finished!<-")
 
-    def process_file(self, url):
+    def process_file(self):
         sf = shapefile.Reader(self.path)
 
         print("Processing new shape file...")
@@ -166,3 +166,13 @@ class ProcesseShapes:
             new_data.update(data)
             with open(path, "w") as jsonFile:
                 json.dump(new_data, jsonFile)
+
+# JUST FOR TEST THIS CLASS
+# if __name__ == "__main__":
+    # a = 1
+    # if a == 1:
+    #     file2 = ProcesseShapes(<path_to_shapefile>,<shape_width_min_value>, <shape_width_max_value>, <path_to_save_new_shapefile>)
+    #     file2.delete_shapes_out_of_range()
+    # else:
+    #     file2 = ProcesseShapes(<path_to_shapefile>)
+    #     file2.process_file()
