@@ -86,9 +86,9 @@ class ProcesseShapes:
                 min_limit = min_limit + 1
 
                 # build json file
-                json_data[min_limit] = image.BuildJsonFile(shape)
+                json_data[min_limit], stop = image.BuildJsonFile(shape)
 
-            if idx >= max_limit:
+            if idx >= max_limit or stop == 'X':
                 break
 
             idx = idx + 1    

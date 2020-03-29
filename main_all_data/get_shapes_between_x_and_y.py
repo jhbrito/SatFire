@@ -48,7 +48,7 @@ class ProcesseShapes:
             y_dist = haversine(y_minpoint, y_maxpoint)
 
             if x_dist != "" and y_dist != "":
-                if ((x_dist <= self.max and x_dist >= self.min) or (y_dist <= self.max and y_dist >= self.min) ):
+                if ((x_dist <= self.max and x_dist >= self.min) or (y_dist <= self.max and y_dist >= self.min)) and shape.record.HoraAlerta != '':
                     new_shapefile.record(*shape.record)
                     new_shapefile.shape(shape.shape)
                 else:

@@ -94,8 +94,8 @@ class ProcesseShapes:
                 wms_image_cos = image.GetWmsImage((256,256), bounding_box, new_path, 'COS')
                 wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')  
 
-            if (idx - min_limit) == 2:
-                break
+            # if (idx - min_limit) == 2: #generate two files at a time
+            #     break
             idx = idx + 1
         print("File Processing is finished!")
 

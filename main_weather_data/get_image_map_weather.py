@@ -291,30 +291,39 @@ class GetImageMap:
         #convert to Lat/Long
         center_lat,center_lon  = transform(inProj,outProj,center_x,center_y)
         
-        data = self.GetWeatherConditions(shape,center_lat,center_lon)
+        data, stop = self.GetWeatherConditions(shape,center_lat,center_lon)
 
         data.update({'area': shape.record.Area_SIG})
 
-        return data
+        return data, stop
     
     def GetWeatherConditions(self, shape, lat, longt):
         
         lat_long = str(lat)[:6]+' '+str(longt)[:6]
-        url = 'https://api.worldweatheronline.com/premium/v1/past-weather.ashx?'+'date='+str(shape.record.DHInicio[:10])+'&includelocation=yes'+'&tp=1'+'&key=683b13468c16425d800122732200702'+'&q='+lat_long+'&format=json'
         
         # get aproximately hour (entire number)
-        if int(shape.record.DHInicio[14:16]) >= 30:
-            hour = int(shape.record.DHInicio[11:13]) + 1
-        else:
-            hour = int(shape.record.DHInicio[11:13])
+        try:
+            if int(shape.record.DHInicio[14:16]) >= 30:
+                hour = int(shape.record.DHInicio[11:13]) + 1
+            else:
+                hour = int(shape.record.DHInicio[11:13])
+
+            if hour == 24:
+                hour == 00
+        except:
+            raise Exception('HTTP Error: Invalide URL') 
         
+        url = 'https://api.worldweatheronline.com/premium/v1/past-weather.ashx?'+'date='+str(shape.record.DHInicio[:10])+'&includelocation=yes'+'&tp=1'+'&key=683b13468c16425d800122732200702'+'&q='+lat_long+'&format=json'
 
         myResponse = requests.get(url)
 
         if(myResponse.ok):
             json_data = json.loads(myResponse.content)
-
-            hourly=json_data['data']['weather'][0]['hourly'][hour]
+            try:
+                hourly=json_data['data']['weather'][0]['hourly'][hour]
+            except:
+                raise Exception('HTTP Error: Invalide URL') 
+            
             out_dict={
                 'date': shape.record.DHInicio[:10],
                 'hour':hour,
@@ -328,12 +337,13 @@ class GetImageMap:
                 'WindGustKmph': hourly['WindGustKmph'],
                 'lat/long': lat_long
                 }
-
+            stop = ''
         else:
         # If response code is not ok (200), print the resulting http error code with description
             myResponse.raise_for_status()
-    	
-        return out_dict
+            stop = 'X'
+
+        return out_dict, stop
 
 # JUST FOR TEST THIS CLASS
 # if __name__ == "__main__":
