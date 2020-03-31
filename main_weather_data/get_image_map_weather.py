@@ -291,11 +291,9 @@ class GetImageMap:
         #convert to Lat/Long
         center_lat,center_lon  = transform(inProj,outProj,center_x,center_y)
         
-        data, stop = self.GetWeatherConditions(shape,center_lat,center_lon)
+        data = self.GetWeatherConditions(shape,center_lat,center_lon)
 
-        data.update({'area': shape.record.Area_SIG})
-
-        return data, stop
+        return data
     
     def GetWeatherConditions(self, shape, lat, longt):
         
@@ -309,7 +307,7 @@ class GetImageMap:
                 hour = int(shape.record.DHInicio[11:13])
 
             if hour == 24:
-                hour == 00
+                hour = 0
         except:
             raise Exception('HTTP Error: Invalide URL') 
         
@@ -319,11 +317,9 @@ class GetImageMap:
 
         if(myResponse.ok):
             json_data = json.loads(myResponse.content)
-            try:
-                hourly=json_data['data']['weather'][0]['hourly'][hour]
-            except:
-                raise Exception('HTTP Error: Invalide URL') 
             
+            hourly=json_data['data']['weather'][0]['hourly'][hour]
+
             out_dict={
                 'date': shape.record.DHInicio[:10],
                 'hour':hour,
@@ -335,15 +331,15 @@ class GetImageMap:
                 'precipMM': hourly['precipMM'],
                 'cloudcover': hourly['cloudcover'],
                 'WindGustKmph': hourly['WindGustKmph'],
-                'lat/long': lat_long
+                'lat/long': lat_long,
+                'area': shape.record.Area_SIG
                 }
-            stop = ''
         else:
         # If response code is not ok (200), print the resulting http error code with description
-            myResponse.raise_for_status()
-            stop = 'X'
+            # myResponse.raise_for_status()
+            out_dic={}
 
-        return out_dict, stop
+        return out_dict
 
 # JUST FOR TEST THIS CLASS
 # if __name__ == "__main__":

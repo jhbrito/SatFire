@@ -77,7 +77,7 @@ class ProcesseShapes:
 
         min_limit = self.GetNumberRequestsMade(path)
         max_limit = min_limit + max_requests
-
+        stop = ''
         json_data = {}
         idx = 0
         for shape in sf.iterShapeRecords(): #loop shapefile
@@ -86,7 +86,11 @@ class ProcesseShapes:
                 min_limit = min_limit + 1
 
                 # build json file
-                json_data[min_limit], stop = image.BuildJsonFile(shape)
+                json_data[min_limit] = image.BuildJsonFile(shape)
+
+            if not json_data[min_limit]:
+                del json_data[min_limit]
+                stop = 'X'
 
             if idx >= max_limit or stop == 'X':
                 break
