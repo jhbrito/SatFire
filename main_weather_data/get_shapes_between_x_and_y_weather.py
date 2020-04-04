@@ -87,6 +87,9 @@ class ProcesseShapes:
 
                 # build json file
                 json_data[min_limit] = image.BuildJsonFile(shape)
+            else:
+                idx = idx + 1
+                continue
 
             if not json_data[min_limit]:
                 del json_data[min_limit]
