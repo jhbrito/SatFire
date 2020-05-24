@@ -226,30 +226,16 @@ class RGBClassesCodes:
         pixel_value = 1
         i = 0
 
-        for code in list_codes:
-            if type(code) is tuple:
-                while i < len(code):
-                    for code2018 in self.cos2018_rgb_dict.keys():
-                        if str(code2018).startswith(str(code[i])):
-                            new_dict.update({code2018:pixel_value})
-                        else:   
-                            if code2018 in new_dict.keys():
-                                pass
-                            else:
-                                new_dict.update({code2018:0})
-                    i = i + 1
-                
-            else:
+        for element in list_codes:
+
+            for code in element:
+
                 for code2018 in self.cos2018_rgb_dict.keys():
                     if str(code2018).startswith(str(code)):
                         new_dict.update({code2018:pixel_value})
-                    else:   
-                        if code2018 in new_dict.keys():
-                            pass
-                        else:
-                            new_dict.update({code2018:0})
+                
+            pixel_value +=1
 
-            pixel_value = pixel_value + 1  
         new_dict = self.CosClassRGBSubstituition(new_dict)
         return new_dict
 

@@ -10,24 +10,28 @@ from math import sqrt,atan,pi
 import pyproj
 import cv2 as cv2
 import shutil
-from classes_cos2018_weather import RGBClassesCodes
+from classes_cos2018_img import RGBClassesCodes
 import json
 import requests
 from requests.auth import HTTPDigestAuth
+from osgeo import gdal,osr
+import skimage.io as skimage_io
+import sys
 
 class GetImageMap:
 
     def __init__(self):
-        
+
         self.gc_cos = 'COS'
         self.gc_higher = 'Higher'
 
-    def GetWmsImage(self, size, bbox, path, map_descrp, epsg='', url='', img_format='image/png', layer='', style='', binarized=False):
+    def GetWmsImage(self, size, bbox, path, map_descrp, epsg='', url='', img_format='image/tiff', layer='', style='', binarized=False):
         init_size = ()
         if map_descrp == self.gc_cos:
-            init_size = (2600,2600)
+            # init_size = (2600,2600)
+            init_size = (256,256)
             self.url = 'http://mapas.dgterritorio.pt/wms-inspire/cos2018v1'
-            image_name = 'cos.png'
+            image_name = 'cos.tiff'
         elif map_descrp == self.gc_higher:
             init_size = (2048,2048)
             self.url = 'http://mapas.dgterritorio.pt/wms-inspire/mdt50m'
@@ -47,15 +51,15 @@ class GetImageMap:
             try:
                 wms = WebMapService(url, version='1.1.1')
             except:
-                raise Exception('HTTP Error: Invalide URL')  
+                raise Exception('HTTP Error: Invalide URL')
 
         layer_names = list(wms.contents)
-        
-        if (layer == ''):
-            layer = layer_names[0] 
 
-        if (style == '' ): 
-            styles_names = list(wms[layer].styles) 
+        if (layer == ''):
+            layer = layer_names[0]
+
+        if (style == '' ):
+            styles_names = list(wms[layer].styles)
             style = styles_names[0]
 
         response = wms.getmap( layers=[layer],
@@ -65,7 +69,7 @@ class GetImageMap:
                             size=init_size,
                             format=img_format,
                             transparent=False)
-        
+
         if response._response.status_code != 200:
             raise Exception('Wrong Parameters: LAYER or STYLE or EPSG or BBOX or SIZE or IMAGE FORMAT')
 
@@ -75,17 +79,14 @@ class GetImageMap:
         result = out.write(data)
         out.close()
 
-        img = cv2.imread(image_name, cv2.IMREAD_UNCHANGED)
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        dim = size
+        # img = cv2.imread(image_name, cv2.IMREAD_UNCHANGED)
+        # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # dim = size
 
-        # resize image
-        resized = cv2.resize(img_rgb, dim, interpolation = cv2.INTER_NEAREST)
-        cv2.imwrite(image_name, resized)
+        # # resize image
+        # resized = cv2.resize(img_rgb, dim, interpolation = cv2.INTER_NEAREST)
+        # cv2.imwrite(image_name, resized)
 
-        bin_image = self.BuildBinaryImage(image_name, map_descrp)
-        cv2.imwrite(image_name, bin_image)
-        
         self.MoveImageToPath(path, image_name)
 
     def MoveImageToPath(self, path, image_name):
@@ -96,21 +97,21 @@ class GetImageMap:
         im = Image.open(self.image_path)
         np_im = numpy.array(im)
         return np_im
-    
+
     def CreateFolder(self, directory):
         try:
             if not os.path.exists(directory):
                 os.makedirs(directory)
         except OSError:
             print ('Error: Creating directory. ' +  directory)
-    
+
     def DrawAndGetImage(self, shape, img_width, img_height, img_size, image_name, path, binarized=False):
 
         inProj = Proj(init='epsg:3763')
         outProj = Proj(init='epsg:4326')
         size_x = img_size[0]
         size_y = img_size[1]
-    
+
         center_x = (shape.shape.bbox[0] + shape.shape.bbox[2]) / 2
         center_y = (shape.shape.bbox[1] + shape.shape.bbox[3]) / 2
 
@@ -158,21 +159,21 @@ class GetImageMap:
 
             dist_x = haversine(pt4, (point_lat,pt4[1]))
             dist_y = haversine(pt4, (pt4[0],point_lon))
-            
+
             pixel_x = int(round((size_x*dist_x)/(img_width/1000)))
             pixel_y = int(round((size_y*dist_y)/(img_height/1000)))
-        
+
             points_pixel.append([pixel_x,pixel_y])
 
         #draw shape in a new image (RGB)
         image_name = str(image_name) + '.png'
         image = Image.new('RGB', (256,256), color=(255,255,255))
         image.save('new_black_image.png')
-        img = cv2.imread('new_black_image.png') 
+        img = cv2.imread('new_black_image.png')
         contour_points = np.array([points_pixel])
         cv2.fillPoly(img, contour_points, color=(255,0,0))
         cv2.imwrite(image_name,img)
-    
+
         if (binarized == True):
             #convert image to binary
             self.BinarizeImage(image_name)
@@ -181,9 +182,9 @@ class GetImageMap:
         self.DeleteImage('new_black_image.png')
 
     def DeleteImage(self, image_name):
-        try: 
+        try:
             os.remove(image_name)
-        except: 
+        except:
             raise Exception('Impossible to delete Image: %s' + image_name)
 
     def BinarizeImage(self, image_name):
@@ -199,7 +200,7 @@ class GetImageMap:
             inProj = Proj(init='epsg:3763')
         else:
             inProj = Proj(init=epsg)
-        
+
         outProj = Proj(init='epsg:4326')
 
         center_x = (shape.shape.bbox[0] + shape.shape.bbox[2]) / 2
@@ -248,12 +249,17 @@ class GetImageMap:
         bbox = [min(pt1[0], pt2[0], pt3[0], pt4[0]), min(pt1[1], pt2[1], pt3[1], pt4[1]), max(pt1[0], pt2[0], pt3[0], pt4[0]), max(pt1[1], pt2[1], pt3[1], pt4[1])]
 
         return bbox
-    
+
     def BuildBinaryImage(self, img_name, map_descrp):
 
         codes = RGBClassesCodes()
-        cos_list = ['2',('3','4'),'5','6']
-        img = cv2.imread(img_name)
+        cos_list = ['1','2','3',
+                    ('4.1.1.1','4.1.1.2','4.1.1.6'),('4.1.1.3','4.1.1.4'),('4.1.1.5','4.1.1.7'),
+                    ('5.1.1.1','5.1.1.2'),('5.1.1.3','5.1.1.4','5.1.1.7'),('5.1.1.5','5.1.2.1'),('5.1.2.2','5.1.2.3'),('5.1.1.6','a'),
+                    '6',('7','8','9')]
+        
+        img = skimage_io.imread(img_name)
+        img = img[:, :, ::-1] #transform BGR to RGB
         rgb_list={}
 
         # grab the image dimensions
@@ -261,7 +267,7 @@ class GetImageMap:
         w = img.shape[1]
 
         bin_image = np.ones([256,256], dtype=np.uint8)*255
-        
+
         # build new image, pixel by pixel
         if map_descrp == self.gc_cos: #build cos map image
             rgb_list = codes.BuildDynamicDict(cos_list)
@@ -269,6 +275,13 @@ class GetImageMap:
                 for x in range(0, w):
                     if tuple(img[x,y]) in rgb_list.keys():
                         bin_image[x, y] = rgb_list[tuple(img[x,y])]
+                    else:
+                        if (x == 0 and y == 0 ):
+                            continue
+                        elif (x != 0 and y == 0 ):
+                            bin_image[x, y] = bin_image[x-1, y]
+                        else:
+                            bin_image[x, y] = bin_image[x, y-1]
 
         elif map_descrp == self.gc_higher: #build higher map image
             rgb_list = codes.rgb_highercode_dict
@@ -290,56 +303,83 @@ class GetImageMap:
 
         #convert to Lat/Long
         center_lat,center_lon  = transform(inProj,outProj,center_x,center_y)
-        
+
         data = self.GetWeatherConditions(shape,center_lat,center_lon)
 
-        return data
-    
-    def GetWeatherConditions(self, shape, lat, longt):
-        
-        lat_long = str(lat)[:6]+' '+str(longt)[:6]
-        
-        # get aproximately hour (entire number)
-        try:
-            if int(shape.record.DHInicio[14:16]) >= 30:
-                hour = int(shape.record.DHInicio[11:13]) + 1
-            else:
-                hour = int(shape.record.DHInicio[11:13])
+        data.update({'area': shape.record.Area_SIG})
 
-            if hour == 24:
-                hour = 0
-        except:
-            raise Exception('HTTP Error: Invalide URL') 
-        
+        return data
+
+    def GetWeatherConditions(self, shape, lat, longt):
+
+        lat_long = str(lat)[:6]+' '+str(longt)[:6]
         url = 'https://api.worldweatheronline.com/premium/v1/past-weather.ashx?'+'date='+str(shape.record.DHInicio[:10])+'&includelocation=yes'+'&tp=1'+'&key=683b13468c16425d800122732200702'+'&q='+lat_long+'&format=json'
+
+        # get aproximately hour (entire number)
+        if int(shape.record.DHInicio[14:16]) >= 30:
+            hour = int(shape.record.DHInicio[11:13]) + 1
+        else:
+            hour = int(shape.record.DHInicio[11:13])
+
 
         myResponse = requests.get(url)
 
         if(myResponse.ok):
             json_data = json.loads(myResponse.content)
-            
-            hourly=json_data['data']['weather'][0]['hourly'][hour]
 
+            hourly=json_data['data']['weather'][0]['hourly'][hour]
             out_dict={
                 'date': shape.record.DHInicio[:10],
                 'hour':hour,
-                'humidity': hourly['humidity'], 
-                'tempC': hourly['tempC'], 
-                'windspeedKmph': hourly['windspeedKmph'], 
-                'winddir16Point': hourly['winddir16Point'], 
+                'humidity': hourly['humidity'],
+                'tempC': hourly['tempC'],
+                'windspeedKmph': hourly['windspeedKmph'],
+                'winddir16Point': hourly['winddir16Point'],
                 'winddirDegree': hourly['winddirDegree'],
                 'precipMM': hourly['precipMM'],
                 'cloudcover': hourly['cloudcover'],
                 'WindGustKmph': hourly['WindGustKmph'],
-                'lat/long': lat_long,
-                'area': shape.record.Area_SIG
+                'lat/long': lat_long
                 }
+
         else:
         # If response code is not ok (200), print the resulting http error code with description
-            # myResponse.raise_for_status()
-            out_dic={}
+            myResponse.raise_for_status()
 
         return out_dict
+
+    def GetHighersImage(self, bbox, path):
+
+        # this allows GDAL to go throw Python Exceptions
+        gdal.UseExceptions()
+
+        gdal.SetConfigOption('CHECK_DISK_FREE_SPACE', 'NO')  # we don't want free space to be an issue here
+
+        InputImage = r'E:\OneDrive - Instituto Politécnico do Cávado e do Ave\Desktop_backup\Alturas_Portugal_completo.tif'
+
+        try:
+            ds = gdal.Open(InputImage, gdal.GA_ReadOnly)
+        except RuntimeError as e:
+            print('Unable to open INPUT.tif')
+            print(e)
+            sys.exit(1)
+
+        projection = '-projwin' + ' ' + str(bbox[0]) + ' ' + str(bbox[3]) + ' ' + str(bbox[2]) + ' ' + str(bbox[1])
+
+        # More options in: http://manpages.ubuntu.com/manpages/xenial/man1/gdal_translate.1.html
+        options_list = [
+            '-ot Byte',
+            '-of PNG',
+            projection,         #-projwin -8.289023852308949 37.63633719367372 -7.485264582241154 37.05456857914846',
+            '-outsize 256 256',
+            '-scale -3.30125 2369.7'
+        ]
+        options_string = " ".join(options_list)
+        filepath = path + '/higher.png'
+        gdal.Translate(filepath, ds, options=options_string)
+        ds = None
+        new_ds = None
+
 
 # JUST FOR TEST THIS CLASS
 # if __name__ == "__main__":
@@ -350,7 +390,7 @@ class GetImageMap:
 
     # #get and save images from WMS services
     # bounding_box = image.GetBBoxImage(<shape(iterated)>, 5120, 5120, <shape_epsg>)
-        
+
     # wms_image_cos = image.GetWmsImage((256,256), <bounding_box>, <new_path_with_created_folder>, 'COS')
     # wms_image_higher = image.GetWmsImage((256,256), <bounding_box>, <new_path_with_created_folder>, 'Higher')
 

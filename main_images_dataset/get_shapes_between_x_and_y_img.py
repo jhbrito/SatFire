@@ -2,7 +2,7 @@ from pyproj import Proj, transform
 from haversine import haversine
 from epsg_ident import EpsgIdent
 import shutil
-import shapefile 
+import shapefile
 from get_image_map_img import GetImageMap
 import os
 import json
@@ -17,14 +17,14 @@ class ProcesseShapes:
         self.value = 3 #(km)
 
         self.epsg = self.read_epsg() #EPSG coordinates from uploaded shapefile
-        self.inProj = Proj(init=self.epsg) 
-        self.outProj = Proj(init='epsg:4326') #lat long coordinates       
+        self.inProj = Proj(init=self.epsg)
+        self.outProj = Proj(init='epsg:4326') #lat long coordinates
 
     def delete_shapes_out_of_range(self):
-               
+
         # sf = shapefile.Reader(r"E:\OneDrive - Instituto Politécnico do Cávado e do Ave\Desktop_backup\Tese\dados_tese\area_ardida_2017\AreasArdidas_2017_031002018_ETRS89PTTM06")
         sf = shapefile.Reader(self.path)
-        
+
         print("Builting the new shape file ")
 
         # new_doc = 'E:\OneDrive - Instituto Politécnico do Cávado e do Ave\Desktop_backup\Tese\dados_tese\copy'
@@ -33,7 +33,7 @@ class ProcesseShapes:
         new_shapefile.fields = sf.fields[1:] # skip first deletion field
 
         for shape in sf.iterShapeRecords(): #loop shapefile
-           
+
             xmin = shape.shape.bbox[0]
             xmax = shape.shape.bbox[2]
             ymin = shape.shape.bbox[1]
@@ -73,9 +73,9 @@ class ProcesseShapes:
         #create folder to save the information about the shapefile
         head_tail = os.path.split(self.path)
         path = head_tail[0] + '/dataset'
-        image.CreateFolder(path)  
+        image.CreateFolder(path)
 
-        min_limit = self.GetNumberRequestsMade(path) 
+        min_limit = self.GetNumberRequestsMade(path)
         idx=1
 
         for shape in sf.iterShapeRecords(): #loop shapefile
@@ -83,16 +83,17 @@ class ProcesseShapes:
             if idx > min_limit:
                 #create folder to save the information about the shapefile
                 new_path = path + '/' + str(idx)
-                image.CreateFolder(new_path) 
+                image.CreateFolder(new_path)
 
-                #draw de shape and save respective image (256x256)
-                shape_image = image.DrawAndGetImage(shape, 5120, 5120, (256,256), 'shape', new_path, binarized=True)
+                #draw the shape and save respective image (256x256)
+                #shape_image = image.DrawAndGetImage(shape, 5120, 5120, (256,256), 'shape', new_path, binarized=True)
 
                 #get and save images from WMS services
                 bounding_box = image.GetBBoxImage(shape, 5120, 5120, self.epsg)
-            
+
                 wms_image_cos = image.GetWmsImage((256,256), bounding_box, new_path, 'COS')
-                wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')  
+                image.GetHighersImage(bounding_box, new_path)
+                # wms_image_higher = image.GetWmsImage((256,256), bounding_box, new_path, 'Higher')
 
             # if (idx - min_limit) == 2: #generate two files at a time
             #     break
@@ -122,23 +123,23 @@ class ProcesseShapes:
 
         if x_dist != "" and y_dist != "":
             if (x_dist >= self.value or y_dist >= self.value):
-                file1.write("%i \n" %number) 
+                file1.write("%i \n" %number)
             else:
                 file2.write("%i \n" %number)
 
-        del x_dist, y_dist, xmin, xmax, ymin, ymax, x_minpoint, y_minpoint, x_maxpoint, y_maxpoint        
+        del x_dist, y_dist, xmin, xmax, ymin, ymax, x_minpoint, y_minpoint, x_maxpoint, y_maxpoint
 
     def GetNumberRequestsMade(self, directory):
         all_subdirs = os.listdir(directory)
         if all_subdirs:
-            total = int(len(all_subdirs))            
+            total = int(len(all_subdirs))
         else:
             total = 0
 
         return total
-    
+
     def UpdateJsonFile(self, data, directory):
-        path = directory + '/data.json' 
+        path = directory + '/data.json'
         new_data={}
 
         if not os.path.exists(path):
