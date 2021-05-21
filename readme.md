@@ -12,7 +12,7 @@ This repository contains
 |:-------:|:----------:|:--------:|
 |Fire Area| Land Cover | Altitude |
 
-If you use this work, please cite: Guilherme Rodrigues (2021), "WILDFIRE RISK AND BURNED AREA SIMULATOR A DEEP LEARNING APPROACH", Master thesis, School of Technlogy, Polytechnical Institute of Cavado and Ave
+If you use this work, please cite: Guilherme Rodrigues (2021), "WILDFIRE RISK AND BURNED AREA SIMULATOR A DEEP LEARNING APPROACH", Master thesis, School of Technology, Polytechnical Institute of Cavado and Ave
 
 ## READ ME PLEASE:
 
