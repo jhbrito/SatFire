@@ -1,6 +1,7 @@
 # SatFire
 
 Guilherme Rodrigues
+
 José Henrique Brito
 
 ## READ ME PLEASE:
