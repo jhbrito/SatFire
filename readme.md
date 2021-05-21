@@ -8,7 +8,7 @@ Cite: Guilherme Rodrigues (2021), "WILDFIRE RISK AND BURNED AREA SIMULATOR A DEE
 
 This repository contains
 - a dataset of forest fires in Portugal in 2017 and associated metadata of land use/land cover, digital elevation model and weather
-- a a prototype application to estimate buned area from land use/land cover, 
+- a a prototype application to estimate burned area from land use/land cover, 
 
 |![shape](https://user-images.githubusercontent.com/19577316/119171840-085d7700-ba5d-11eb-8e1a-69766900b72d.png)|![cos](https://user-images.githubusercontent.com/19577316/119171866-0f848500-ba5d-11eb-82bd-1822268284af.png)|![alturas](https://user-images.githubusercontent.com/19577316/119171885-16ab9300-ba5d-11eb-9ffe-a53a5d80ac6d.png)|
 |:-------:|:----------:|:--------:|
