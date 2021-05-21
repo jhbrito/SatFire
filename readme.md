@@ -1,8 +1,13 @@
-# READ ME PLEASE:
+# SatFire
+
+Guilherme Rodrigues
+José Henrique Brito
+
+## READ ME PLEASE:
 
 This are the very first instructions you must follow before execute any code:
 
-## 1. Please verify you have the follow libraries installed on your machine, if not please install it as follows:
+### 1. Please verify you have the follow libraries installed on your machine, if not please install it as follows:
 
 ***NOTE1: If the follows commands give you error of connection, you must connect to a VPN to execute them.***
 
